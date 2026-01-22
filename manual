@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseball Score Input - 操作マニュアル</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+
+    <style>
+        body { font-family: sans-serif; }
+        .slide-enter { opacity: 0; transform: translateX(20px); }
+        .slide-enter-active { opacity: 1; transform: translateX(0); transition: all 300ms ease-out; }
+        .slide-exit { opacity: 1; transform: translateX(0); }
+        .slide-exit-active { opacity: 0; transform: translateX(-20px); transition: all 300ms ease-in; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen flex items-center justify-center p-4 md:p-0">
+    <div id="root" class="w-full flex items-center justify-center"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Icon Wrapper ---
+        const IconWrapper = ({ name, size = 24, className }) => {
+            // lucideがまだロードされていない、または定義されていない場合のガードを追加
+            if (typeof lucide === 'undefined' || !lucide.icons) return null;
+
+            const iconData = lucide.icons[name];
+            if (!iconData) return null;
+            const [tag, attrs, children] = iconData;
+            return React.createElement(tag, { ...attrs, width: size, height: size, className }, 
+                children.map(([childTag, childAttrs], index) => React.createElement(childTag, { ...childAttrs, key: index }))
+            );
+        };
+
+        const slides = [
+            {
+                id: 1,
+                title: "Baseball Score Input マニュアル",
+                content: (
+                    <div className="text-center space-y-6">
+                        <div className="flex justify-center mb-8">
+                            <div className="bg-blue-900 p-6 rounded-2xl shadow-xl text-white">
+                                <IconWrapper name="Activity" size={64} />
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-bold text-blue-900">かんたんスコア入力＆集計</h2>
+                        <p className="text-gray-600">
+                            打撃成績を手軽に入力・集計できます。
+                        </p>
+                        <div className="mt-8 p-4 bg-white rounded-lg shadow-sm border border-gray-200 inline-block text-left text-sm">
+                            <p className="font-bold mb-2">このガイドの内容:</p>
+                            <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                                <li>初期設定（URLの登録）</li>
+                                <li>試合前の準備</li>
+                                <li>プレーの入力方法</li>
+                                <li>試合終了時の操作</li>
+                            </ul>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 2,
+                title: "1. 初期設定 (初回のみ)",
+                content: (
+                    <div className="space-y-4">
+                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                            <p className="text-sm text-yellow-800 font-bold">
+                                <IconWrapper name="AlertCircle" size={16} className="inline mr-1"/>
+                                管理者から「スプレッドシートのURL」を受け取ってください。
+                            </p>
+                        </div>
+                        <ol className="list-decimal pl-5 space-y-4 text-gray-700">
+                            <li>
+                                アプリ右上の <span className="inline-flex items-center px-2 py-1 bg-gray-200 rounded text-xs font-bold"><IconWrapper name="Settings" size={14} className="mr-1"/>設定</span> ボタンをタップします。
+                            </li>
+                            <li>
+                                <strong>「スプレッドシート連携」</strong>の欄にある入力ボックスに、受け取ったURLを貼り付けます。
+                            </li>
+                            <li>
+                                その下の<strong>「自チーム名」</strong>に、あなたのチーム名を入力します。
+                            </li>
+                            <li>
+                                「閉じる」ボタンを押せば設定完了です。<br/>
+                                <span className="text-xs text-gray-500">※一度設定すれば、次回からは不要です。</span>
+                            </li>
+                        </ol>
+                        <div className="mt-4 p-3 bg-white border rounded-lg shadow-sm">
+                            <p className="text-xs font-bold text-gray-400 mb-1">画面イメージ</p>
+                            <div className="border-2 border-blue-200 rounded p-2 bg-blue-50 text-xs text-gray-400 break-all">
+                                https://docs.google.com/spreadsheets/d/...
+                            </div>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 3,
+                title: "2. 試合前の準備",
+                content: (
+                    <div className="space-y-4">
+                        <p className="text-gray-600">試合当日は、まず基本情報を入力しましょう。</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white p-4 rounded-lg shadow border">
+                                <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2"><IconWrapper name="Calendar" size={18}/> 試合情報</h3>
+                                <ul className="text-sm space-y-2">
+                                    <li><strong>試合日:</strong> カレンダーから選択</li>
+                                    <li><strong>相手:</strong> 対戦相手チーム名を入力</li>
+                                </ul>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg shadow border">
+                                <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2"><IconWrapper name="ListOrdered" size={18}/> オーダー登録</h3>
+                                <p className="text-sm text-gray-600 mb-2">「オーダー」ボタンからスタメンを設定します。</p>
+                                <div className="text-xs bg-gray-100 p-2 rounded">
+                                    <p className="font-bold text-green-600 mb-1">Point!</p>
+                                    「選手リストをGASから読み込む」ボタンを押すと、スプレッドシートに登録されているメンバーを呼び出せます。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 4,
+                title: "3. 試合中の入力操作",
+                content: (
+                    <div className="space-y-4">
+                        <p className="text-gray-600">一球ごとの入力は不要！走者に動きがあったり、打撃結果が決まったらタップするだけです。</p>
+                        
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-start gap-3">
+                                <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">1</div>
+                                <div>
+                                    <p className="font-bold text-gray-800">結果を選択 (打撃・走塁)</p>
+                                    <p className="text-sm text-gray-600">「ヒット」「三振」などのほか、「盗塁」「暴投」などの走塁結果もボタンをタップします。</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3">
+                                <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">2</div>
+                                <div>
+                                    <p className="font-bold text-gray-800">打球方向を指定 (必要な場合)</p>
+                                    <p className="text-sm text-gray-600">ヒットやフライの場合、グラウンドの図が出るので方向（投・遊・左など）をタップ。</p>
+                                    <div className="mt-1 flex gap-2">
+                                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-bold">ライト前ヒット</span>
+                                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded font-bold">ショートゴロ</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-3">
+                                <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">3</div>
+                                <div>
+                                    <p className="font-bold text-gray-800">状況の確認・修正</p>
+                                    <p className="text-sm text-gray-600">
+                                        塁をタップしてランナー位置を修正したり、アウトカウントをタップして増減させることができます。<br/>
+                                        盗塁やエラーの際も正しい状態へ手動で合わせられます。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 5,
+                title: "4. 試合終了とデータ送信",
+                content: (
+                    <div className="space-y-4">
+                        <p className="text-gray-600">試合が終わったら、結果をスプレッドシートに保存します。</p>
+                        
+                        <div className="border-l-4 border-indigo-500 pl-4 py-2 bg-indigo-50 rounded-r">
+                            <h3 className="font-bold text-indigo-900 mb-1">手順</h3>
+                            <ol className="list-decimal pl-5 text-sm text-indigo-800 space-y-1">
+                                <li>画面上部の<strong>「得点盤」</strong>ボタンをタップ。</li>
+                                <li>イニングごとの点数を確認（修正可能）。</li>
+                                <li>後攻の攻撃なし等は<strong>「x」</strong>を入力可能。</li>
+                                <li><strong>「先攻/後攻」</strong>が正しいか確認。</li>
+                                <li><strong>「データ送信」</strong>ボタンを押す。</li>
+                            </ol>
+                        </div>
+
+                        <div className="text-center mt-4">
+                            <p className="text-sm font-bold text-gray-500 mb-2">送信完了！</p>
+                            <div className="inline-block p-3 bg-white border border-green-200 rounded-lg shadow-sm">
+                                <p className="text-xs text-gray-400">スプレッドシート</p>
+                                <div className="flex gap-1 mt-1">
+                                    <div className="w-4 h-4 bg-green-500 rounded-sm"></div>
+                                    <div className="w-20 h-4 bg-gray-200 rounded-sm"></div>
+                                </div>
+                                <div className="flex gap-1 mt-1">
+                                    <div className="w-4 h-4 bg-green-500 rounded-sm"></div>
+                                    <div className="w-20 h-4 bg-gray-200 rounded-sm"></div>
+                                </div>
+                                <p className="text-[10px] text-green-600 mt-2 font-bold">自動で追記されます</p>
+                            </div>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 6,
+                title: "困ったときは",
+                content: (
+                    <div className="text-center space-y-6">
+                        <IconWrapper name="HelpCircle" size={64} className="mx-auto text-blue-400" />
+                        <h2 className="text-xl font-bold text-gray-800">不明点や不具合がある場合</h2>
+                        <p className="text-gray-600">
+                            設定画面の一番下にある<br/>
+                            <strong>「不具合・問い合わせ」</strong>ボタンから<br/>
+                            管理者にメールを送ることができます。
+                        </p>
+                        <div className="mt-8">
+                            <button onClick={() => window.location.reload()} className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition">
+                                最初に戻る
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+        ];
+
+        const SlideShow = () => {
+            const [currentSlide, setCurrentSlide] = useState(0);
+
+            const nextSlide = () => {
+                if (currentSlide < slides.length - 1) setCurrentSlide(curr => curr + 1);
+            };
+
+            const prevSlide = () => {
+                if (currentSlide > 0) setCurrentSlide(curr => curr - 1);
+            };
+
+            return (
+                <div className="w-full max-w-2xl bg-white md:rounded-2xl shadow-2xl flex flex-col min-h-screen md:min-h-0 md:h-[600px] overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-blue-900 text-white p-4 flex justify-between items-center shrink-0">
+                        <h1 className="font-bold text-lg">操作ガイド</h1>
+                        <span className="text-sm font-mono">{currentSlide + 1} / {slides.length}</span>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 p-6 md:p-10 md:overflow-y-auto flex flex-col relative">
+                        <div className="flex-1">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">
+                                {slides[currentSlide].title}
+                            </h2>
+                            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                                {slides[currentSlide].content}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer / Controls */}
+                    <div className="p-4 bg-gray-50 border-t flex justify-between items-center shrink-0">
+                        <button 
+                            onClick={prevSlide} 
+                            disabled={currentSlide === 0}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition ${currentSlide === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-blue-700 hover:bg-blue-100'}`}
+                        >
+                            <IconWrapper name="ChevronLeft" size={20} /> 戻る
+                        </button>
+
+                        <div className="flex gap-1">
+                            {slides.map((_, i) => (
+                                <div key={i} className={`w-2 h-2 rounded-full transition-all ${i === currentSlide ? 'bg-blue-600 w-4' : 'bg-gray-300'}`}></div>
+                            ))}
+                        </div>
+
+                        <button 
+                            onClick={nextSlide} 
+                            disabled={currentSlide === slides.length - 1}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition ${currentSlide === slides.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'}`}
+                        >
+                            次へ <IconWrapper name="ChevronRight" size={20} />
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SlideShow />);
+    </script>
+</body>
+</html>
